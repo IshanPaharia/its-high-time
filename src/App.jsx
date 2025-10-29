@@ -46,7 +46,7 @@ export default function App() {
 
   const start = useMemo(() => {
     const s = new Date(endDate);
-    s.setDate(s.getDate() - (daysToShow - 1));
+    s.setDate(s.getDate() - (daysToShow - 1)); // inclusive window
     return s;
   }, [daysToShow, endDate]);
 
@@ -74,12 +74,18 @@ export default function App() {
   useEffect(() => {
     const check = async () => {
       const { data } = await supabase.auth.getUser();
-      const owner = !!data.user && data.user.id === OWNER_UUID;
+      const u = data.user ?? null;
+      const owner = !!u && u.id === OWNER_UUID;
       setIsOwner(owner);
       setSaveState(owner ? "saved" : "readonly");
     };
     check();
-    const { data: sub } = supabase.auth.onAuthStateChange(() => check());
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      const u = session?.user ?? null;
+      const owner = !!u && u.id === OWNER_UUID;
+      setIsOwner(owner);
+      setSaveState(owner ? "saved" : "readonly");
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -139,12 +145,16 @@ export default function App() {
     })();
   }, [target]);
 
-  // ---- Save helper with small retry ----
+  // ---- Save helper with small retry (writes as the signed-in user) ----
   async function saveEntry(dayKey, updated) {
-    if (!isOwner) return; // read-only viewer
+    const { data } = await supabase.auth.getUser();
+    const user = data.user;
+    if (!user || user.id !== OWNER_UUID) return; // viewer or not owner
+
     setSaveState("saving");
+
     const payload = {
-      user_id: OWNER_UUID,
+      user_id: user.id, // write as session user (matches RLS)
       day: dayKey,
       fixed1: !!updated.fixed[0],
       fixed2: !!updated.fixed[1],
@@ -153,6 +163,7 @@ export default function App() {
       optional_text: updated.optionalText ?? "",
       updated_at: new Date().toISOString(),
     };
+
     const attempt = async () => supabase.from("entries").upsert(payload, { onConflict: "day" });
     let { error } = await attempt();
     if (error) {
@@ -236,12 +247,6 @@ export default function App() {
         {/* Legend + Save status (fixed 182 days; dropdown removed) */}
         <section className="mt-8 flex flex-wrap items-center gap-3">
           <Legend />
-          {/* <div className="text-xs text-neutral-400 ml-auto">
-            {saveState === "readonly" && "Read-only: sign in as owner to save"}
-            {saveState === "saving" && "Saving..."}
-            {saveState === "saved" && "All changes saved"}
-            {saveState === "error" && "Save failed — check console"}
-          </div> */}
         </section>
 
         {/* Original vertical grid */}
@@ -271,7 +276,7 @@ export default function App() {
           <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-5">
             <h2 className="text-lg font-medium">How brightness works</h2>
             <ul className="mt-3 list-disc pl-5 text-sm text-neutral-300 space-y-2">
-              <li>Each day has 3 fixed tasks and 1 optional task (+ optional text).</li>
+              <li>Each day has 3 fixed tasks and 1 optional task (+ optional task).</li>
               <li>
                 Brightness is based on <span className="font-semibold">3 slots</span>. Each fixed task fills 1 slot. If you miss a fixed task, the optional task can fill{" "}
                 <span className="font-semibold">one</span> missing slot.
@@ -286,7 +291,7 @@ export default function App() {
         </section>
 
         <footer className="mt-10 text-xs text-neutral-500">
-          Built with React + Tailwind (public view; owner can edit).
+          Built with React + Tailwind + a dream to make life better.
         </footer>
 
         {/* One tooltip instance */}
