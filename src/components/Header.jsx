@@ -7,13 +7,13 @@ export default function Header({ target, onChangeTarget }) {
             POV: winter arc comeback 
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
           <label className="text-sm text-neutral-300">Target date</label>
           <input
             type="date"
             value={target}
             onChange={(e) => onChangeTarget(e.target.value)}
-            className="bg-neutral-900 text-neutral-100 rounded-lg px-3 py-2 border border-neutral-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full sm:w-auto bg-neutral-900 text-neutral-100 rounded-lg px-3 py-2 border border-neutral-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
       </header>

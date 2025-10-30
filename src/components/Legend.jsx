@@ -1,7 +1,7 @@
 export default function Legend() {
     const box = "inline-block h-4 w-4 rounded-sm";
     return (
-      <div className="ml-auto flex items-center gap-2 text-xs text-neutral-400">
+      <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-neutral-400 sm:ml-auto sm:justify-end">
         <span className={`${box} bg-neutral-700`} />
         <span>none</span>
         <span className={box} style={{ background: "hsl(142 70% 16%)" }} />
