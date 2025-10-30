@@ -1,9 +1,9 @@
 export default function DayEditor({ selectedKey, record, setTask, onClear, onToggleGolden, labels }) {
     return (
       <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-5">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-medium">Edit day</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
             <button className="text-xs px-2 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700" onClick={() => onClear(selectedKey)}>
               Clear
             </button>
