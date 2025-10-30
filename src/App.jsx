@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 // Utils & client
 import { fmtDateKey, parseDateKey, todayKey as tk, generateDateRange } from "./utils/dates";
@@ -34,8 +34,8 @@ export default function App() {
   const [selectedKey, setSelectedKey] = useState(tk());
   const [target, setTarget] = useState(null);
 
-  // Fixed range: 182 days
-  const [daysToShow] = useState(182);
+  // Visible range adapts to available space
+  const [daysToShow, setDaysToShow] = useState(182);
 
   // Save state + owner detection
   const [saveState, setSaveState] = useState("readonly"); // "readonly" | "saving" | "saved" | "error"
@@ -51,6 +51,13 @@ export default function App() {
   }, [daysToShow, endDate]);
 
   const dates = useMemo(() => generateDateRange(start, endDate), [start, endDate]);
+
+  const handleVisibleDaysChange = useCallback((count) => {
+    setDaysToShow((prev) => {
+      const next = Math.max(7, Math.round(count / 7) * 7);
+      return prev === next ? prev : next;
+    });
+  }, []);
 
   // Tooltip
   const [tip, setTip] = useState(null);
@@ -251,16 +258,17 @@ export default function App() {
 
         {/* Original vertical grid */}
         <section className="mt-4">
-          <Grid
-            dates={dates}
-            data={data}
-            todayKey={todayKey}
-            onPickDay={setSelectedKey}
-            computeDayState={computeDayState}
-            shadeFromFraction={shadeFromFraction}
-            showTip={showTip}
-            hideTip={hideTip}
-          />
+        <Grid
+          dates={dates}
+          data={data}
+          todayKey={todayKey}
+          onPickDay={setSelectedKey}
+          computeDayState={computeDayState}
+          shadeFromFraction={shadeFromFraction}
+          showTip={showTip}
+          hideTip={hideTip}
+          onVisibleDaysChange={handleVisibleDaysChange}
+        />
         </section>
 
         {/* Editor */}
